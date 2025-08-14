@@ -1,0 +1,19 @@
+<!-- templates/login.html -->
+{% extends 'base.html' %}
+
+{% block title %}Login | QikSend-X{% endblock %}
+
+{% block content %}
+<div class="login-container">
+  <h2>Login to QikSend-X</h2>
+  <form action="{{ url_for('login') }}" method="POST" class="login-form">
+    <label>Email</label>
+    <input type="email" name="email" required placeholder="Enter your email">
+
+    <label>Password</label>
+    <input type="password" name="password" required placeholder="Enter your password">
+
+    <button type="submit">Login</button>
+  </form>
+</div>
+{% endblock %}

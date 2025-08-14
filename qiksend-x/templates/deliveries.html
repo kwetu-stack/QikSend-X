@@ -1,0 +1,44 @@
+<!-- templates/deliveries.html -->
+{% extends 'base.html' %}
+
+{% block title %}Deliveries | QikSend-X{% endblock %}
+
+{% block content %}
+<h2>All Deliveries</h2>
+
+<a href="{{ url_for('add_delivery') }}" class="btn">+ Add New Delivery</a>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Sender</th>
+      <th>Receiver</th>
+      <th>Status</th>
+      <th>Rider</th>
+      <th>Payment</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for delivery in deliveries %}
+    <tr>
+      <td>{{ delivery.id }}</td>
+      <td>{{ delivery.sender_name }}</td>
+      <td>{{ delivery.receiver_name }}</td>
+      <td>{{ delivery.status }}</td>
+      <td>{{ delivery.rider_name }}</td>
+      <td>{{ delivery.payment_status }}</td>
+      <td>
+        <a href="{{ url_for('edit_delivery', delivery_id=delivery.id) }}">Edit</a> |
+        <a href="{{ url_for('delete_delivery', delivery_id=delivery.id) }}" onclick="return confirm('Are you sure?')">Delete</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="7">No deliveries found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
