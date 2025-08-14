@@ -6,11 +6,12 @@ from pathlib import Path
 # ---- Paths & Config ----
 BASE_DIR = Path(__file__).resolve().parent
 
-# Use subfolder if present; otherwise fall back to root-level folders
-TEMPLATES_DIR = "qiksend-x/templates" if (BASE_DIR / "qiksend-x" / "templates").exists() else "templates"
-STATIC_DIR    = "qiksend-x/static"    if (BASE_DIR / "qiksend-x" / "static").exists()    else "static"
-
-app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
+# Force subfolder paths (your repo keeps templates/static under qiksend-x/)
+app = Flask(
+    __name__,
+    template_folder="qiksend-x/templates",
+    static_folder="qiksend-x/static",
+)
 
 # Secrets & admin credentials (override in Render → Environment)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "qiksend_secret")
@@ -56,6 +57,11 @@ def init_db():
 
 # Ensure DB exists when running under Gunicorn
 init_db()
+
+# Health check (helps diagnose 502s quickly)
+@app.get("/healthz")
+def healthz():
+    return "ok", 200
 
 # ---------- ROUTES ----------
 
@@ -113,7 +119,7 @@ def deliveries():
         return redirect(url_for("login"))
 
     conn = get_db_connection()
-    deliveries = conn.execute(
+    deliveries_rows = conn.execute(
         """
         SELECT d.id, d.sender_name, d.receiver_name, d.status, d.payment_status,
                r.name AS rider_name
@@ -123,7 +129,7 @@ def deliveries():
         """
     ).fetchall()
     conn.close()
-    return render_template("deliveries.html", deliveries=deliveries)
+    return render_template("deliveries.html", deliveries=deliveries_rows)
 
 
 @app.route("/add-delivery", methods=["GET", "POST"])
@@ -154,9 +160,9 @@ def add_delivery():
         flash("Delivery added successfully.")
         return redirect(url_for("deliveries"))
 
-    riders = conn.execute("SELECT * FROM riders ORDER BY id DESC").fetchall()
+    riders_rows = conn.execute("SELECT * FROM riders ORDER BY id DESC").fetchall()
     conn.close()
-    return render_template("add-delivery.html", riders=riders)
+    return render_template("add-delivery.html", riders=riders_rows)
 
 
 # --- Riders ---
