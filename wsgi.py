@@ -1,17 +1,20 @@
-# wsgi.py — stable entrypoint for Gunicorn
-# Works for both styles:
-#   1) app = Flask(__name__)
-#   2) def create_app(): return app
+# wsgi.py — robust entrypoint for Gunicorn. Loads app.py by file path.
+from pathlib import Path
+import importlib.util, sys
 
-from importlib import import_module
+ROOT = Path(__file__).resolve().parent
+APP_FILE = ROOT / "app.py"                # <-- app.py is at repo root
 
-mod = import_module("app")  # imports app.py as a module
+if not APP_FILE.exists():
+    raise RuntimeError(f"app.py not found at {APP_FILE}. Files here: {list(ROOT.iterdir())}")
 
-if hasattr(mod, "app"):
-    app = mod.app
-elif hasattr(mod, "create_app"):
+spec = importlib.util.spec_from_file_location("app", str(APP_FILE))
+mod = importlib.util.module_from_spec(spec)
+sys.modules["app"] = mod
+spec.loader.exec_module(mod)
+
+app = getattr(mod, "app", None)
+if app is None and hasattr(mod, "create_app"):
     app = mod.create_app()
-else:
-    raise RuntimeError(
-        "Neither 'app' nor 'create_app()' found in app.py"
-    )
+if app is None:
+    raise RuntimeError("Neither 'app' nor 'create_app()' found in app.py")
