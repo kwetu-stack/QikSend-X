@@ -1,12 +1,18 @@
-# wsgi.py — robust entrypoint for Gunicorn. Loads app.py by file path.
+# wsgi.py — loads app.py by FILE PATH so it works with or without a subfolder
 from pathlib import Path
 import importlib.util, sys
 
 ROOT = Path(__file__).resolve().parent
-APP_FILE = ROOT / "app.py"                # <-- app.py is at repo root
 
-if not APP_FILE.exists():
-    raise RuntimeError(f"app.py not found at {APP_FILE}. Files here: {list(ROOT.iterdir())}")
+# Try common locations
+CANDIDATES = [
+    ROOT / "app.py",
+    ROOT / "qiksend-x" / "app.py",   # <— adjust folder name if different
+]
+
+APP_FILE = next((p for p in CANDIDATES if p.exists()), None)
+if not APP_FILE:
+    raise RuntimeError(f"app.py not found. Looked in: {CANDIDATES}. Files here: {list(ROOT.iterdir())}")
 
 spec = importlib.util.spec_from_file_location("app", str(APP_FILE))
 mod = importlib.util.module_from_spec(spec)

@@ -1,164 +1,204 @@
+# app.py — QikSend-X
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-import sqlite3
-import os
+import sqlite3, os
+from pathlib import Path
 
-app = Flask(__name__)
-app.secret_key = 'qiksend_secret'
+# ---- Paths & Config ----
+BASE_DIR = Path(__file__).resolve().parent
 
-DATABASE = 'qiksendx.db'
+# Use subfolder if present; otherwise fall back to root-level folders
+TEMPLATES_DIR = "qiksend-x/templates" if (BASE_DIR / "qiksend-x" / "templates").exists() else "templates"
+STATIC_DIR    = "qiksend-x/static"    if (BASE_DIR / "qiksend-x" / "static").exists()    else "static"
+
+app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
+
+# Secrets & admin credentials (override in Render → Environment)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "qiksend_secret")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@qiksend.com")
+ADMIN_PASS  = os.getenv("ADMIN_PASS",  "admin123")
+
+# SQLite location (Render-friendly)
+DATA_DIR = os.getenv("DATA_DIR", str(BASE_DIR / "data"))
+os.makedirs(DATA_DIR, exist_ok=True)
+DATABASE = os.path.join(DATA_DIR, "qiksendx.db")
+
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
-# ---------- ROUTES ----------
 
-@app.route('/')
-def home():
-    return redirect(url_for('login'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-
-        if email == 'admin@qiksend.com' and password == 'admin123':
-            session['user'] = 'admin'
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Invalid credentials. Try again.')
-            return redirect(url_for('login'))
-
-    return render_template('login.html')
-
-@app.route('/logout')
-def logout():
-    session.pop('user', None)
-    return redirect(url_for('login'))
-
-@app.route('/dashboard')
-def dashboard():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
+def init_db():
+    """Create tables if they don't exist (safe to run on every boot)."""
     conn = get_db_connection()
-    total_deliveries = conn.execute('SELECT COUNT(*) FROM deliveries').fetchone()[0]
-    pending_deliveries = conn.execute("SELECT COUNT(*) FROM deliveries WHERE status = 'Pending'").fetchone()[0]
-    total_riders = conn.execute('SELECT COUNT(*) FROM riders').fetchone()[0]
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS riders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            phone TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS deliveries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sender_name TEXT NOT NULL,
+            receiver_name TEXT NOT NULL,
+            status TEXT NOT NULL,
+            rider_id INTEGER,
+            payment_status TEXT NOT NULL,
+            FOREIGN KEY (rider_id) REFERENCES riders(id)
+        )
+    """)
+    conn.commit()
     conn.close()
 
-    return render_template('dashboard.html',
-                           total_deliveries=total_deliveries,
-                           pending_deliveries=pending_deliveries,
-                           total_riders=total_riders)
+
+# Ensure DB exists when running under Gunicorn
+init_db()
+
+# ---------- ROUTES ----------
+
+@app.route("/")
+def home():
+    return redirect(url_for("login"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        if email == ADMIN_EMAIL and password == ADMIN_PASS:
+            session["user"] = "admin"
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Invalid credentials. Try again.")
+            return redirect(url_for("login"))
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect(url_for("login"))
+
+
+@app.route("/dashboard")
+def dashboard():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    total_deliveries   = conn.execute("SELECT COUNT(*) FROM deliveries").fetchone()[0]
+    pending_deliveries = conn.execute("SELECT COUNT(*) FROM deliveries WHERE status = 'Pending'").fetchone()[0]
+    total_riders       = conn.execute("SELECT COUNT(*) FROM riders").fetchone()[0]
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        total_deliveries=total_deliveries,
+        pending_deliveries=pending_deliveries,
+        total_riders=total_riders,
+    )
+
 
 # --- Deliveries ---
 
-@app.route('/deliveries')
+@app.route("/deliveries")
 def deliveries():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     conn = get_db_connection()
-    deliveries = conn.execute('''
-        SELECT d.id, d.sender_name, d.receiver_name, d.status, d.payment_status, 
+    deliveries = conn.execute(
+        """
+        SELECT d.id, d.sender_name, d.receiver_name, d.status, d.payment_status,
                r.name AS rider_name
         FROM deliveries d
         LEFT JOIN riders r ON d.rider_id = r.id
         ORDER BY d.id DESC
-    ''').fetchall()
+        """
+    ).fetchall()
     conn.close()
-    return render_template('deliveries.html', deliveries=deliveries)
+    return render_template("deliveries.html", deliveries=deliveries)
 
-@app.route('/add-delivery', methods=['GET', 'POST'])
+
+@app.route("/add-delivery", methods=["GET", "POST"])
 def add_delivery():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     conn = get_db_connection()
 
-    if request.method == 'POST':
-        sender = request.form['sender_name']
-        receiver = request.form['receiver_name']
-        status = request.form['status']
-        rider_id = request.form['rider_id']
-        payment = request.form['payment_status']
+    if request.method == "POST":
+        sender   = request.form.get("sender_name", "").strip()
+        receiver = request.form.get("receiver_name", "").strip()
+        status   = request.form.get("status", "Pending").strip()
+        rider_id = request.form.get("rider_id", "").strip()
+        payment  = request.form.get("payment_status", "Unpaid").strip()
 
-        conn.execute('''
+        rider_id_val = int(rider_id) if rider_id.isdigit() else None
+
+        conn.execute(
+            """
             INSERT INTO deliveries (sender_name, receiver_name, status, rider_id, payment_status)
             VALUES (?, ?, ?, ?, ?)
-        ''', (sender, receiver, status, rider_id, payment))
+            """,
+            (sender, receiver, status, rider_id_val, payment),
+        )
         conn.commit()
         conn.close()
-        flash('Delivery added successfully.')
-        return redirect(url_for('deliveries'))
+        flash("Delivery added successfully.")
+        return redirect(url_for("deliveries"))
 
-    riders = conn.execute('SELECT * FROM riders').fetchall()
+    riders = conn.execute("SELECT * FROM riders ORDER BY id DESC").fetchall()
     conn.close()
-    return render_template('add-delivery.html', riders=riders)
+    return render_template("add-delivery.html", riders=riders)
+
 
 # --- Riders ---
 
-@app.route('/riders')
+@app.route("/riders")
 def riders():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     conn = get_db_connection()
-    riders = conn.execute('SELECT * FROM riders ORDER BY id DESC').fetchall()
+    rows = conn.execute("SELECT * FROM riders ORDER BY id DESC").fetchall()
     conn.close()
-    return render_template('riders.html', riders=riders)
+    return render_template("riders.html", riders=rows)
 
-@app.route('/add-rider', methods=['GET', 'POST'])
+
+@app.route("/add-rider", methods=["GET", "POST"])
 def add_rider():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
-    if request.method == 'POST':
-        name = request.form['name']
-        phone = request.form['phone']
+    if request.method == "POST":
+        name  = request.form.get("name", "").strip()
+        phone = request.form.get("phone", "").strip()
 
         conn = get_db_connection()
-        conn.execute('INSERT INTO riders (name, phone) VALUES (?, ?)', (name, phone))
+        conn.execute("INSERT INTO riders (name, phone) VALUES (?, ?)", (name, phone))
         conn.commit()
         conn.close()
-        flash('Rider added successfully.')
-        return redirect(url_for('riders'))
+        flash("Rider added successfully.")
+        return redirect(url_for("riders"))
 
-    return render_template('add-rider.html')
+    return render_template("add-rider.html")
 
-# --- 404 Handler ---
+
+# --- 404 ---
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    return render_template("404.html"), 404
 
-# ---------- START ----------
 
-if __name__ == '__main__':
-    if not os.path.exists(DATABASE):
-        conn = get_db_connection()
-        conn.execute('''
-            CREATE TABLE riders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                phone TEXT NOT NULL
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE deliveries (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sender_name TEXT NOT NULL,
-                receiver_name TEXT NOT NULL,
-                status TEXT NOT NULL,
-                rider_id INTEGER,
-                payment_status TEXT NOT NULL,
-                FOREIGN KEY (rider_id) REFERENCES riders(id)
-            )
-        ''')
-        conn.commit()
-        conn.close()
-
-    app.run(debug=True)
+# ---------- DEV ENTRYPOINT ----------
+# (Production uses Gunicorn via wsgi.py -> wsgi:app)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000, debug=True)
