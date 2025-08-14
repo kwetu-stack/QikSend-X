@@ -10,12 +10,18 @@
 <body>
   <header class="navbar">
     <div class="brand">QikSend-X</div>
+
     <nav class="nav-links" id="navLinks">
-      <a href="{{ url_for('dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('deliveries') }}">Deliveries</a>
-      <a href="{{ url_for('riders') }}">Riders</a>
-      <a href="{{ url_for('logout') }}">Logout</a>
+      {% if session.get('user') %}
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('deliveries') }}">Deliveries</a>
+        <a href="{{ url_for('riders') }}">Riders</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+      {% endif %}
     </nav>
+
     <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   </header>
 
