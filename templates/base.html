@@ -1,0 +1,45 @@
+{% set brand = "QikSend-X" %}
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}{{ brand }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+  <script>
+    (function(){const s=localStorage.getItem("qik-theme");const d=matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", s|| (d?"dark":"dark"));
+      window.toggleTheme = function(){const c=document.documentElement.getAttribute("data-theme");const n=c==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",n);localStorage.setItem("qik-theme",n);};
+      window.toggleMenu=function(){const el=document.getElementById("navLinks"); if(el) el.classList.toggle("open");};
+    })();
+  </script>
+</head>
+<body>
+<header class="navbar">
+  <div class="brand">{{ brand }}</div>
+  <nav id="navLinks" class="nav-links">
+    {% if session.get('user_id') %}
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('customers') }}">Customers</a>
+      <a href="{{ url_for('transactions') }}">Transactions</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">Login</a>
+    {% endif %}
+    <a href="javascript:void(0)" class="badge" onclick="toggleTheme()">Theme</a>
+  </nav>
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+</header>
+
+<main>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}<div class="flash">{% for m in messages %}<div class="flash-item">{{ m }}</div>{% endfor %}</div>{% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div>Powered by Kwetu Partners Ltd • <a href="mailto:kwetudist@gmail.com">kwetudist@gmail.com</a> • +254 740 337 272</div>
+  <div class="small">“Name it — we code it.”</div>
+</footer>
+</body>
+</html>

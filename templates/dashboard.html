@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | QikSend-X{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="badge">QikSend-X</span>
+  <h1 style="margin:.6rem 0 0;">Dashboard</h1>
+  <p class="muted" style="margin:.2rem 0 0;">Today: {{ today }}</p>
+</div>
+
+<div class="grid-3">
+  <div class="stat"><div class="stat-num">{{ kpis.tx_today }}</div><div class="stat-label">Transactions Today</div></div>
+  <div class="stat"><div class="stat-num">KES {{ "%.2f"|format(kpis.volume_today) }}</div><div class="stat-label">Volume Today</div></div>
+  <div class="stat"><div class="stat-num">{{ kpis.pending }}</div><div class="stat-label">Pending</div></div>
+</div>
+
+<section class="card" style="margin-top:1rem;">
+  <h3>Recent Transactions</h3>
+  <table class="table">
+    <thead><tr><th>ID</th><th>Customer</th><th>Amount</th><th>Fee</th><th>To</th><th>Channel</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>
+      {% for t in recent %}
+        <tr>
+          <td>#{{ t.id }}</td><td>{{ t.customer_name }}</td>
+          <td>{{ t.currency }} {{ "%.2f"|format(t.amount) }}</td>
+          <td>{{ t.currency }} {{ "%.2f"|format(t.fee) }}</td>
+          <td>{{ t.to_name }} ({{ t.to_phone or "-" }})</td>
+          <td>{{ t.channel }}</td>
+          <td>{{ t.status }}</td>
+          <td>{{ t.created_at }}</td>
+        </tr>
+      {% else %}<tr><td colspan="8" class="muted">No transactions yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

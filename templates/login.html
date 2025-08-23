@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Login | QikSend-X{% endblock %}
+{% block content %}
+<section class="card card-center">
+  <h2>Sign in</h2>
+  <form method="post" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="form-grid">
+      <label>Email<input type="email" name="email" placeholder="email@example.com" required></label>
+      <label>Password<input type="password" name="password" placeholder="••••••••" required></label>
+    </div>
+    <button type="submit" class="btn-primary" style="margin-top:.8rem;">Login</button>
+  </form>
+</section>
+{% endblock %}

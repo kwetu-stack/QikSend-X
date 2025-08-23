@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Customers | QikSend-X{% endblock %}
+{% block content %}
+<h1>Customers</h1>
+<section class="grid-2">
+  <div class="card">
+    <h3>Add Customer</h3>
+    <form method="post" class="form-grid">
+      <label>Name<input name="name" required></label>
+      <label>Phone<input name="phone" placeholder="+2547..."></label>
+      <label>ID No<input name="id_no" placeholder="ID / Passport"></label>
+      <button class="btn-primary">Save</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>All Customers</h3>
+    <table class="table">
+      <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>ID No</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+          <tr><td>{{ loop.index }}</td><td>{{ r.name }}</td><td>{{ r.phone or "-" }}</td><td>{{ r.id_no or "-" }}</td></tr>
+        {% else %}<tr><td colspan="4" class="muted">No customers yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
