@@ -1,0 +1,16 @@
+:root{--bg:#0b1220;--panel:#0f1b34;--line:#1e2a44;--text:#e6edff;--brand:#60a5fa;--brand2:#22d3ee}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 800px at 10% -10%, #1e293b33, transparent),var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+a{color:var(--brand);text-decoration:none}a:hover{text-decoration:underline}
+.navbar{position:sticky;top:0;z-index:10;background:linear-gradient(90deg,#0a1326,#0b1a33);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:12px 18px}
+.menu a{margin:0 12px;color:#c9d4ef}.menu a.active{color:#fff;font-weight:600}
+.container{max-width:1100px;margin:20px auto;padding:0 16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:linear-gradient(180deg,#0f1b34,#0b162a);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.h1{font-size:28px;margin:10px 0 8px}.h2{font-size:18px;color:#cfe3ff;margin:0 0 6px 0}.stat{font-size:34px;font-weight:700}
+.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px;border-bottom:1px solid var(--line);font-size:14px;text-align:left}
+.badge{padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:#112041}
+.badge.created{background:#13254a}.badge.in_transit{background:#1b2f5b}.badge.out_for_delivery{background:#1e3a6a}.badge.delivered{background:#0c3a27;color:#c8ffe0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1529;color:var(--text)}
+.btn{display:inline-block;padding:10px 14px;border-radius:12px;border:0;cursor:pointer;font-weight:700;color:#051427;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.btn.secondary{background:#162544;color:#cfd8f9}.footer{color:#93a2c9;font-size:12px;text-align:center;padding:24px}.notice{padding:10px;border:1px solid var(--line);background:#0d1a33;border-radius:12px;margin-bottom:10px}
