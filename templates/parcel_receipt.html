@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Receipt · {{ p["tracking_code"] }} · QikSend-X{% endblock %}
+
+{% block content %}
+<h1 class="h1">Delivery Receipt</h1>
+
+<div class="card" style="max-width:920px;margin:auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div>
+      <div style="font-weight:600">QikSend-X</div>
+      <div class="muted">Built for parcel tracking</div>
+    </div>
+    <button class="btn" onclick="window.print()">Print</button>
+  </div>
+
+  <div class="form-grid">
+    <div>
+      <label>Tracking No</label>
+      <input class="input" value="{{ p['tracking_code'] }}" readonly>
+    </div>
+    <div>
+      <label>Status</label>
+      <input class="input" value="{{ p['current_status'] }}" readonly>
+    </div>
+    <div>
+      <label>Created At</label>
+      <input class="input" value="{{ p['created_at'] }}" readonly>
+    </div>
+    <div>
+      <label>Last Update</label>
+      <input class="input" value="{{ p['updated_at'] }}" readonly>
+    </div>
+
+    <div>
+      <label>Sender Name</label>
+      <input class="input" value="{{ p['sender_name'] }}" readonly>
+    </div>
+    <div>
+      <label>Sender Phone</label>
+      <input class="input" value="{{ p['sender_phone'] }}" readonly>
+    </div>
+
+    <div>
+      <label>Recipient Name</label>
+      <input class="input" value="{{ p['recipient_name'] }}" readonly>
+    </div>
+    <div>
+      <label>Recipient Phone</label>
+      <input class="input" value="{{ p['recipient_phone'] }}" readonly>
+    </div>
+
+    <div>
+      <label>Origin (Pickup)</label>
+      <input class="input" value="{{ p['origin'] or '' }}" readonly>
+    </div>
+    <div>
+      <label>Destination</label>
+      <input class="input" value="{{ p['destination'] or '' }}" readonly>
+    </div>
+
+    <div style="grid-column:1 / -1">
+      <label>Description</label>
+      <input class="input" value="{{ p['description'] or '' }}" readonly>
+    </div>
+
+    <div>
+      <label>Weight (kg)</label>
+      <input class="input" value="{{ '%.2f'|format(p['weight'] or 0) }}" readonly>
+    </div>
+    <div>
+      <label>Fee (KES)</label>
+      <input class="input" value="{{ '%.2f'|format(p['fee'] or 0) }}" readonly>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;font-size:12px;opacity:.8">
+    * Keep this receipt and tracking number for pickup/delivery confirmation.
+  </div>
+</div>
+{% endblock %}

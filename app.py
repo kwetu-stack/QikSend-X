@@ -30,6 +30,7 @@ def close_db(e):
 def init_db():
     (BASE_DIR/'data').mkdir(exist_ok=True)
     db = get_db()
+    # Base tables
     db.executescript('''
         CREATE TABLE IF NOT EXISTS parcels(
             id INTEGER PRIMARY KEY,
@@ -39,20 +40,46 @@ def init_db():
             description TEXT DEFAULT '',
             weight REAL DEFAULT 0,
             fee REAL DEFAULT 0,
+            -- include new columns for fresh DBs
+            origin TEXT DEFAULT '',
+            destination TEXT DEFAULT '',
             current_status TEXT DEFAULT 'CREATED',
             created_at TEXT, updated_at TEXT
         );
-    '''); db.commit()
+
+        CREATE TABLE IF NOT EXISTS locations(
+            id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE,
+            is_active INTEGER DEFAULT 1
+        );
+    ''')
+    # Safe migration for existing DBs
+    cols = {r['name'] for r in db.execute("PRAGMA table_info(parcels)")}
+    if 'origin' not in cols:
+        db.execute("ALTER TABLE parcels ADD COLUMN origin TEXT DEFAULT ''")
+    if 'destination' not in cols:
+        db.execute("ALTER TABLE parcels ADD COLUMN destination TEXT DEFAULT ''")
+    db.commit()
 
 def seed():
     db = get_db()
+    # Seed demo parcel if empty
     if db.execute('SELECT COUNT(*) FROM parcels').fetchone()[0] == 0:
         now = datetime.datetime.now().isoformat(timespec='seconds')
-        db.execute('INSERT INTO parcels(tracking_code,sender_name,sender_phone,recipient_name,recipient_phone,description,weight,fee,current_status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
-                   ('QK-20250826-00001','Bundi','+254700','Jane','+254711','Small electronics',1.2,350,'IN_TRANSIT',now,now)); db.commit()
+        db.execute('INSERT INTO parcels(tracking_code,sender_name,sender_phone,recipient_name,recipient_phone,description,weight,fee,current_status,created_at,updated_at,origin,destination) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                   ('QK-20250826-00001','Bundi','+254700','Jane','+254711','Small electronics',1.2,350,'IN_TRANSIT',now,now,'Nairobi CBD','Eldoret Depot'))
+        db.commit()
+    # Seed locations if empty
+    if db.execute('SELECT COUNT(*) FROM locations').fetchone()[0] == 0:
+        db.executemany('INSERT INTO locations(name,is_active) VALUES(?,1)',
+                       [('Nairobi CBD',), ('Thika Rd Hub',), ('Eldoret Depot',),
+                        ('Mombasa Port',), ('Kisumu City Branch',)])
+        db.commit()
 
 @app.before_request
-def setup(): init_db(); seed()
+def setup(): 
+    init_db(); 
+    seed()
 
 @app.route('/')
 @login_required
@@ -72,13 +99,54 @@ def parcels():
 @app.route('/parcels/new', methods=['GET','POST'])
 @login_required
 def new_parcel():
+    db = get_db()
     if request.method == 'POST':
         f = request.form; now = datetime.datetime.now().isoformat(timespec='seconds')
         code = 'QK-'+datetime.datetime.now().strftime('%Y%m%d')+'-'+str(int(datetime.datetime.now().timestamp()))[-5:]
-        get_db().execute('INSERT INTO parcels(tracking_code,sender_name,sender_phone,recipient_name,recipient_phone,description,weight,fee,current_status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
-                         (code,f['sender_name'],f['sender_phone'],f['recipient_name'],f['recipient_phone'],f.get('description',''),float(f.get('weight') or 0),float(f.get('fee') or 0),'CREATED',now,now))
+        origin = f.get('origin','').strip()
+        destination = f.get('destination','').strip()
+        db.execute('''
+            INSERT INTO parcels(
+                tracking_code,sender_name,sender_phone,
+                recipient_name,recipient_phone,description,
+                weight,fee,origin,destination,
+                current_status,created_at,updated_at
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ''', (code,
+              f['sender_name'], f['sender_phone'],
+              f['recipient_name'], f['recipient_phone'],
+              f.get('description',''),
+              float(f.get('weight') or 0),
+              float(f.get('fee') or 0),
+              origin, destination,
+              'CREATED', now, now))
         g.db.commit(); flash('Parcel created '+code); return redirect(url_for('parcels'))
-    return render_template('new_parcel.html')
+
+    locations = db.execute('SELECT id, name FROM locations WHERE is_active=1 ORDER BY name').fetchall()
+    return render_template('new_parcel.html', locations=locations)
+
+@app.route('/parcels/<tracking>/receipt')
+@login_required
+def parcel_receipt(tracking):
+    p = get_db().execute('SELECT * FROM parcels WHERE tracking_code=?', (tracking,)).fetchone()
+    if not p:
+        abort(404)
+    return render_template('parcel_receipt.html', p=p)
+
+# NEW: status update endpoint (CREATED -> IN_TRANSIT -> DELIVERED)
+@app.route('/parcels/<tracking>/status/<new_status>', methods=['POST'])
+@login_required
+def update_status(tracking, new_status):
+    allowed = ['CREATED', 'IN_TRANSIT', 'DELIVERED']
+    if new_status not in allowed:
+        abort(400)
+    now = datetime.datetime.now().isoformat(timespec='seconds')
+    db = get_db()
+    db.execute('UPDATE parcels SET current_status=?, updated_at=? WHERE tracking_code=?',
+               (new_status, now, tracking))
+    db.commit()
+    flash(f"Status updated to {new_status}")
+    return redirect(url_for('parcels'))
 
 @app.route('/customers')
 @login_required
