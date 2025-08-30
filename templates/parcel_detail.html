@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Parcel · {{ p["tracking_code"] }} · QikSend-X{% endblock %}
+
+{% block content %}
+<h1 class="h1">Parcel Details</h1>
+
+<div class="card" style="max-width:980px;margin:auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div>
+      <div style="font-weight:600">QikSend-X</div>
+      <div class="muted">Parcel tracking & delivery receipt</div>
+    </div>
+    <div>
+      <a class="btn" href="{{ url_for('parcels') }}" style="margin-right:8px">Back</a>
+      <button class="btn" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <div class="form-grid">
+    <!-- Top row -->
+    <div>
+      <label>Tracking No</label>
+      <input class="input" value="{{ p['tracking_code'] }}" readonly>
+    </div>
+    <div>
+      <label>Status</label>
+      <div class="input" style="display:flex;align-items:center;gap:8px">
+        <span class="badge {{ p['current_status']|replace(' ','_')|lower }}">{{ p['current_status'] }}</span>
+      </div>
+    </div>
+    <div>
+      <label>Created At</label>
+      <input class="input" value="{{ p['created_at'] }}" readonly>
+    </div>
+    <div>
+      <label>Last Update</label>
+      <input class="input" value="{{ p['updated_at'] }}" readonly>
+    </div>
+
+    <!-- Parties -->
+    <div>
+      <label>Sender</label>
+      <input class="input" value="{{ p['sender_name'] }} ({{ p['sender_phone'] }})" readonly>
+    </div>
+    <div>
+      <label>Recipient</label>
+      <input class="input" value="{{ p['recipient_name'] }} ({{ p['recipient_phone'] }})" readonly>
+    </div>
+
+    <!-- Route -->
+    <div>
+      <label>Origin Branch</label>
+      <input class="input" value="{{ p['origin_branch_name'] }} — {{ p['origin_branch_location'] }}" readonly>
+    </div>
+    <div>
+      <label>Destination Branch</label>
+      <input class="input" value="{{ p['destination_branch_name'] }} — {{ p['destination_branch_location'] }}" readonly>
+    </div>
+
+    <!-- Courier (optional) -->
+    <div>
+      <label>Courier</label>
+      <input class="input" value="{{ (p['courier_name'] ~ ' (' ~ p['courier_phone'] ~ ')') if p['courier_name'] else 'Unassigned' }}" readonly>
+    </div>
+
+    <!-- Description / Amount -->
+    <div style="grid-column:1 / -1">
+      <label>Description</label>
+      <input class="input" value="{{ p['description'] or '' }}" readonly>
+    </div>
+    <div>
+      <label>Amount (KES)</label>
+      <input class="input" value="{{ '%.2f'|format(p['amount'] or 0) }}" readonly>
+    </div>
+  </div>
+
+  <!-- Status actions (non-print area) -->
+  <div class="no-print" style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap">
+    <form method="post" action="{{ url_for('update_status', id=p['id']) }}">
+      <input type="hidden" name="new_status" value="In_Transit">
+      <button class="btn btn-small" type="submit">Mark In Transit</button>
+    </form>
+
+    <form method="post" action="{{ url_for('update_status', id=p['id']) }}">
+      <input type="hidden" name="new_status" value="Delivered">
+      <button class="btn btn-small" type="submit">Mark Delivered</button>
+    </form>
+
+    <a class="btn btn-small" href="{{ url_for('edit_parcel', id=p['id']) }}">Edit</a>
+    <form method="post" action="{{ url_for('delete_parcel', id=p['id']) }}" onsubmit="return confirm('Delete this parcel?');">
+      <button class="btn btn-small danger" type="submit">Delete</button>
+    </form>
+  </div>
+
+  <div style="margin-top:16px;font-size:12px;opacity:.8">
+    * Keep this receipt and tracking number for pickup/delivery confirmation.
+  </div>
+</div>
+
+<style>
+  @media print {
+    .no-print, .no-print * { display: none !important; }
+    .card { box-shadow: none !important; border: 1px solid #1f2937; }
+    body { background: white !important; color: black !important; }
+  }
+</style>
+{% endblock %}

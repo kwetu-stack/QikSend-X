@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Branches · QikSend-X{% endblock %}
+
+{% block content %}
+<h1 class="h1">Branches</h1>
+
+<div style="margin-bottom:12px">
+  <a class="btn" href="{{ url_for('new_branch') }}">New Branch</a>
+</div>
+
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Location</th>
+        <th>Created</th>
+        <th style="width:200px">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in branches %}
+      <tr>
+        <td>{{ b.name }}</td>
+        <td>{{ b.phone or '—' }}</td>
+        <td>{{ b.location }}</td>
+        <td>{{ b.created_at }}</td>
+        <td>
+          <a href="{{ url_for('edit_branch', id=b.id) }}">Edit</a>
+          <form method="post"
+                action="{{ url_for('delete_branch', id=b.id) }}"
+                style="display:inline;margin-left:8px"
+                onsubmit="return confirm('Delete this branch?');">
+            <button class="btn btn-small danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="muted">No branches yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

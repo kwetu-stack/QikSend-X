@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if courier else 'New' }} Courier · QikSend-X{% endblock %}
+{% block content %}
+<h1 class="h1">{{ 'Edit' if courier else 'New' }} Courier</h1>
+
+<form method="post" class="card" style="max-width:640px">
+  <div class="form-grid">
+    <div>
+      <label>Name</label>
+      <input class="input" name="name" value="{{ courier.name if courier else '' }}" required>
+    </div>
+    <div>
+      <label>Phone</label>
+      <input class="input" name="phone" value="{{ courier.phone if courier else '' }}" placeholder="+2547..." required>
+    </div>
+    <div>
+      <label>Active</label>
+      <select class="input" name="active">
+        <option value="1" {{ 'selected' if courier and courier.active else '' }}>Yes</option>
+        <option value="0" {{ 'selected' if courier and not courier.active else '' }}>No</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;display:flex;gap:8px">
+    <button class="btn" type="submit">{{ 'Save Changes' if courier else 'Create Courier' }}</button>
+    <a class="btn" href="{{ url_for('couriers') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

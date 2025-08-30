@@ -13,29 +13,45 @@
         <th>Recipient</th>
         <th>Status</th>
         <th>Updated</th>
-        <th style="width:320px">Action</th>
+        <th style="width:340px">Action</th>
       </tr>
     </thead>
     <tbody>
       {% for row in parcels %}
       <tr>
-        <td>{{ row['tracking_code'] }}</td>
+        <td>
+          <a href="{{ url_for('parcel_detail', id=row['id']) }}">
+            {{ row['tracking_code'] }}
+          </a>
+        </td>
         <td>{{ row['sender_name'] }} ({{ row['sender_phone'] }})</td>
         <td>{{ row['recipient_name'] }} ({{ row['recipient_phone'] }})</td>
         <td>
-          <span class="badge">{{ row['current_status'] }}</span>
+          <span class="badge {{ row['current_status']|replace(' ','_')|lower }}">
+            {{ row['current_status'] }}
+          </span>
         </td>
         <td>{{ row['updated_at'] }}</td>
         <td>
-          <a href="{{ url_for('public_track', code=row['tracking_code']) }}">Track</a> |
-          <a href="{{ url_for('parcel_receipt', tracking=row['tracking_code']) }}">Receipt</a>
+          <a href="{{ url_for('parcel_detail', id=row['id']) }}">View</a> |
+          <a href="{{ url_for('track', code=row['tracking_code']) }}">Track</a> |
+          <a href="{{ url_for('edit_parcel', id=row['id']) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_parcel', id=row['id']) }}"
+                style="display:inline;margin-left:6px"
+                onsubmit="return confirm('Delete this parcel?');">
+            <button class="btn btn-small danger" type="submit">Delete</button>
+          </form>
 
-          <!-- Status change buttons -->
-          <form method="post" action="{{ url_for('update_status', tracking=row['tracking_code'], new_status='IN_TRANSIT') }}" style="display:inline;margin-left:8px">
+          <!-- Status update -->
+          <form method="post" action="{{ url_for('update_status', id=row['id']) }}"
+                style="display:inline;margin-left:6px">
+            <input type="hidden" name="new_status" value="In_Transit">
             <button class="btn btn-small" type="submit">Mark In Transit</button>
           </form>
 
-          <form method="post" action="{{ url_for('update_status', tracking=row['tracking_code'], new_status='DELIVERED') }}" style="display:inline;margin-left:6px">
+          <form method="post" action="{{ url_for('update_status', id=row['id']) }}"
+                style="display:inline;margin-left:6px">
+            <input type="hidden" name="new_status" value="Delivered">
             <button class="btn btn-small" type="submit">Mark Delivered</button>
           </form>
         </td>
@@ -47,4 +63,3 @@
   </table>
 </div>
 {% endblock %}
-

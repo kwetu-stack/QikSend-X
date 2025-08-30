@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if branch else 'New' }} Branch · QikSend-X{% endblock %}
+{% block content %}
+<h1 class="h1">{{ 'Edit' if branch else 'New' }} Branch</h1>
+
+<form method="post" class="card" style="max-width:640px">
+  <div class="form-grid">
+    <div>
+      <label>Name</label>
+      <input class="input" name="name" value="{{ branch.name if branch else '' }}" required>
+    </div>
+    <div>
+      <label>Phone</label>
+      <input class="input" name="phone" value="{{ branch.phone if branch else '' }}" placeholder="+2547...">
+    </div>
+    <div style="grid-column:1 / -1">
+      <label>Location</label>
+      <input class="input" name="location" value="{{ branch.location if branch else '' }}" required placeholder="e.g. Nairobi CBD">
+    </div>
+  </div>
+
+  <div style="margin-top:12px;display:flex;gap:8px">
+    <button class="btn" type="submit">{{ 'Save Changes' if branch else 'Create Branch' }}</button>
+    <a class="btn" href="{{ url_for('branches') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

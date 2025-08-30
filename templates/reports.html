@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Reports · QikSend-X{% endblock %}
+
+{% block content %}
+<h1 class="h1">Reports</h1>
+
+<div class="card">
+  <form method="get" class="form-grid" style="align-items:end">
+    <div>
+      <label>From (date)</label>
+      <input class="input" type="date" name="start_date" value="{{ request.args.get('start_date','') }}">
+    </div>
+    <div>
+      <label>To (date)</label>
+      <input class="input" type="date" name="end_date" value="{{ request.args.get('end_date','') }}">
+    </div>
+    <div>
+      <label>Status</label>
+      <select class="input" name="status">
+        <option value="">All</option>
+        <option value="Created" {{ 'selected' if request.args.get('status')=='Created' else '' }}>Created</option>
+        <option value="In_Transit" {{ 'selected' if request.args.get('status')=='In_Transit' else '' }}>In_Transit</option>
+        <option value="Delivered" {{ 'selected' if request.args.get('status')=='Delivered' else '' }}>Delivered</option>
+      </select>
+    </div>
+    <div>
+      <label>Search (tracking / names)</label>
+      <input class="input" type="text" name="q" value="{{ request.args.get('q','') }}" placeholder="e.g. QSX123, Jane, Westlands">
+    </div>
+
+    <div style="display:flex; gap:8px">
+      <button class="btn" type="submit">Apply Filters</button>
+
+      <!-- CSV export submits same filters + export=csv -->
+      <button class="btn" name="export" value="csv" type="submit">Export CSV</button>
+    </div>
+  </form>
+</div>
+
+<div class="card" style="margin-top:12px">
+  <div class="h2">Parcels</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Tracking</th>
+        <th>Sender → Recipient</th>
+        <th>Route</th>
+        <th>Courier</th>
+        <th>Amount (KES)</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in results %}
+      <tr>
+        <td>
+          <a href="{{ url_for('parcel_detail', id=p['id']) }}">{{ p['tracking_code'] }}</a>
+        </td>
+        <td>{{ p['sender_name'] }} → {{ p['recipient_name'] }}</td>
+        <td>{{ p['origin_branch_name'] }} → {{ p['destination_branch_name'] }}</td>
+        <td>{{ p['courier_name'] or '—' }}</td>
+        <td>{{ '%.2f'|format(p['amount'] or 0) }}</td>
+        <td><span class="badge {{ p['current_status']|replace(' ','_')|lower }}">{{ p['current_status'] }}</span></td>
+        <td>{{ p['created_at'] }}</td>
+        <td>{{ p['updated_at'] }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="muted">No parcels found for the selected filters.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

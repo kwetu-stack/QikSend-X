@@ -1,1 +1,53 @@
-{% extends "base.html" %}{% block title %}Dashboard · QikSend‑X{% endblock %}{% block content %}<h1 class="h1">Dashboard</h1><div class="grid-3"><div class="card"><div class="h2">All Parcels</div><div class="stat">{{ stats.total }}</div></div><div class="card"><div class="h2">Delivered</div><div class="stat">{{ stats.delivered }}</div></div><div class="card"><div class="h2">Pending</div><div class="stat">{{ stats.total - stats.delivered }}</div></div></div><div class="card" style="margin-top:14px"><div class="h2">Recent Parcels</div><table class="table"><thead><tr><th>Tracking</th><th>Sender → Recipient</th><th>Status</th><th>Updated</th></tr></thead><tbody>{% for p in recent %}<tr><td><a href="{{ url_for('public_track', code=p['tracking_code']) }}">{{ p['tracking_code'] }}</a></td><td>{{ p['sender_name'] }} → {{ p['recipient_name'] }}</td><td><span class="badge {{ p['current_status']|replace(' ','_')|lower }}">{{ p['current_status'] }}</span></td><td>{{ p['updated_at'] }}</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Dashboard · QikSend-X{% endblock %}
+
+{% block content %}
+<h1 class="h1">Dashboard</h1>
+
+<!-- KPI tiles: EXACTLY the 3 statuses per Project Anchor -->
+<div class="grid-3">
+  <div class="card">
+    <div class="h2">Created</div>
+    <div class="stat">{{ stats.created }}</div>
+  </div>
+  <div class="card">
+    <div class="h2">In_Transit</div>
+    <div class="stat">{{ stats.in_transit }}</div>
+  </div>
+  <div class="card">
+    <div class="h2">Delivered</div>
+    <div class="stat">{{ stats.delivered }}</div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="h2">Recent Parcels</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Tracking</th>
+        <th>Sender → Recipient</th>
+        <th>Status</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in recent %}
+      <tr>
+        <td>
+          <a href="{{ url_for('track', code=p['tracking_code']) }}">{{ p['tracking_code'] }}</a>
+        </td>
+        <td>{{ p['sender_name'] }} → {{ p['recipient_name'] }}</td>
+        <td>
+          <!-- status chip uses enum; keep your class pattern -->
+          <span class="badge {{ p['current_status']|replace(' ', '_')|lower }}">
+            {{ p['current_status'] }}
+          </span>
+        </td>
+        <td>{{ p['updated_at'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

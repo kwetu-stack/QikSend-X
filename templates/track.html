@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Track · QikSend-X{% endblock %}
+{% block content %}
+<h1 class="h1">Track Parcel</h1>
+
+<div class="card" style="max-width:560px">
+  <form method="get" action="{{ url_for('track') }}" class="form-grid">
+    <div>
+      <label>Tracking Code</label>
+      <input class="input" name="code" value="{{ request.args.get('code','') }}" placeholder="e.g. QSX-00123" required>
+    </div>
+    <div><button class="btn" type="submit">Track</button></div>
+  </form>
+
+  {% if result %}
+  <div class="divider"></div>
+  <div class="form-grid" style="margin-top:8px">
+    <div><label>Status</label><div class="input"><span class="badge {{ result.current_status|replace(' ','_')|lower }}">{{ result.current_status }}</span></div></div>
+    <div><label>Updated</label><input class="input" value="{{ result.updated_at }}" readonly></div>
+    <div><label>Sender</label><input class="input" value="{{ result.sender_name }} ({{ result.sender_phone }})" readonly></div>
+    <div><label>Recipient</label><input class="input" value="{{ result.recipient_name }} ({{ result.recipient_phone }})" readonly></div>
+    <div><label>Route</label><input class="input" value="{{ result.origin_branch_name }} → {{ result.destination_branch_name }}" readonly></div>
+    <div><a class="btn" href="{{ url_for('parcel_detail', id=result.id) }}">Open Details</a></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
