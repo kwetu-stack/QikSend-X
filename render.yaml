@@ -3,8 +3,13 @@ services:
     name: qiksendx
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --preload --bind 0.0.0.0:$PORT
+    pythonVersion: 3.11.9
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: FLASK_SECRET_KEY
         generateValue: true
