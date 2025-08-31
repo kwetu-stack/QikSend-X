@@ -3,7 +3,6 @@ services:
     name: qiksendx
     env: python
     plan: free
-    pythonVersion: 3.11.9
     buildCommand: |
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
@@ -13,6 +12,8 @@ services:
     envVars:
       - key: FLASK_SECRET_KEY
         generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.11.9
     disk:
       name: data
       mountPath: /opt/render/project/src/data
