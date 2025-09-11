@@ -5,19 +5,21 @@
 <h1 class="h1">Parcel Details</h1>
 
 <div class="card" style="max-width:980px;margin:auto">
+
+  <!-- Header with receipt title + actions -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div>
       <div style="font-weight:600">QikSend-X</div>
       <div class="muted">Parcel tracking & delivery receipt</div>
     </div>
-    <div>
+    <div class="no-print">
       <a class="btn" href="{{ url_for('parcels') }}" style="margin-right:8px">Back</a>
       <button class="btn" onclick="window.print()">Print</button>
     </div>
   </div>
 
+  <!-- Parcel info -->
   <div class="form-grid">
-    <!-- Top row -->
     <div>
       <label>Tracking No</label>
       <input class="input" value="{{ p['tracking_code'] }}" readonly>
@@ -37,7 +39,6 @@
       <input class="input" value="{{ p['updated_at'] }}" readonly>
     </div>
 
-    <!-- Parties -->
     <div>
       <label>Sender</label>
       <input class="input" value="{{ p['sender_name'] }} ({{ p['sender_phone'] }})" readonly>
@@ -47,7 +48,6 @@
       <input class="input" value="{{ p['recipient_name'] }} ({{ p['recipient_phone'] }})" readonly>
     </div>
 
-    <!-- Route -->
     <div>
       <label>Origin Branch</label>
       <input class="input" value="{{ p['origin_branch_name'] }} — {{ p['origin_branch_location'] }}" readonly>
@@ -57,13 +57,11 @@
       <input class="input" value="{{ p['destination_branch_name'] }} — {{ p['destination_branch_location'] }}" readonly>
     </div>
 
-    <!-- Courier (optional) -->
     <div>
       <label>Courier</label>
       <input class="input" value="{{ (p['courier_name'] ~ ' (' ~ p['courier_phone'] ~ ')') if p['courier_name'] else 'Unassigned' }}" readonly>
     </div>
 
-    <!-- Description / Amount -->
     <div style="grid-column:1 / -1">
       <label>Description</label>
       <input class="input" value="{{ p['description'] or '' }}" readonly>
@@ -74,7 +72,7 @@
     </div>
   </div>
 
-  <!-- Status actions (non-print area) -->
+  <!-- Status actions (screen only) -->
   <div class="no-print" style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap">
     <form method="post" action="{{ url_for('update_status', id=p['id']) }}">
       <input type="hidden" name="new_status" value="In_Transit">
@@ -100,8 +98,15 @@
 <style>
   @media print {
     .no-print, .no-print * { display: none !important; }
-    .card { box-shadow: none !important; border: 1px solid #1f2937; }
-    body { background: white !important; color: black !important; }
+    .card { 
+      box-shadow: none !important; 
+      border: 1px solid #1f2937; 
+      background: #fff !important;
+      color: #000 !important;
+    }
+    body { background: #fff !important; color: #000 !important; }
+    h1.h1 { font-size: 18px; margin-bottom: 10px; }
+    input.input { border: 1px solid #aaa !important; }
   }
 </style>
 {% endblock %}

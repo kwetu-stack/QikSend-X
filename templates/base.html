@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}QikSend-X · Parcel Tracker{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Print cleanup -->
+  <style>
+    @media print {
+      /* Hide all chrome/UI that shouldn't be on paper */
+      .navbar, .footer, .no-print, nav, header, .actions,
+      .btn, .button, .breadcrumbs { display: none !important; }
+
+      /* Force light paper-friendly look */
+      html, body { background: #fff !important; color: #000 !important; }
+      .container, .card, .panel, .surface {
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+      }
+
+      /* Remove link URLs after anchors */
+      a[href]:after { content: "" !important; }
+
+      /* Fit page nicely */
+      @page { size: auto; margin: 10mm; }
+
+      /* Avoid broken boxes across pages */
+      .row, .field, .form-group, .card { break-inside: avoid; }
+    }
+  </style>
 </head>
 <body>
   <header class="navbar">
@@ -23,16 +49,15 @@
         <a href="{{ url_for('customers') }}" class="{% if request.path.startswith('/customers') %}active{% endif %}">Customers</a>
         <a href="{{ url_for('reports') }}" class="{% if request.path.startswith('/reports') %}active{% endif %}">Reports</a>
       {% else %}
-        <!-- Public can always track -->
         <a href="{{ url_for('track') }}" class="{% if request.path.startswith('/track') %}active{% endif %}">Track</a>
       {% endif %}
     </nav>
 
     <div>
       {% if session.get('user') %}
-        <a href="{{ url_for('logout') }}">Logout</a>
+        <a href="{{ url_for('logout') }}" class="no-print">Logout</a>
       {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('login') }}" class="no-print">Login</a>
       {% endif %}
     </div>
   </header>
@@ -40,7 +65,7 @@
   <main class="container">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div class="notice">
+        <div class="notice no-print">
           {% for m in messages %}{{ m }}{% if not loop.last %}<br>{% endif %}{% endfor %}
         </div>
       {% endif %}
@@ -48,6 +73,6 @@
     {% block content %}{% endblock %}
   </main>
 
-  <div class="footer">© 2025 QikSend-X · Built for parcel tracking · <span class="muted">QikSend-X v1</span></div>
+  <div class="footer no-print">© 2025 QikSend-X · Built for parcel tracking · <span class="muted">QikSend-X v1</span></div>
 </body>
 </html>
