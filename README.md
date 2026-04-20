@@ -1,2 +1,2 @@
 # QikSend-X Boilerplate
-Login: admin@qiksend.local / kwetutech002
+Login: admin / admin123

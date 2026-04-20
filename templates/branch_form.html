@@ -4,6 +4,7 @@
 <h1 class="h1">{{ 'Edit' if branch else 'New' }} Branch</h1>
 
 <form method="post" class="card" style="max-width:640px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="form-grid">
     <div>
       <label>Name</label>

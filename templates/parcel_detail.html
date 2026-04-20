@@ -5,12 +5,10 @@
 <h1 class="h1">Parcel Details</h1>
 
 <div class="card" style="max-width:980px;margin:auto">
-
-  <!-- Header with receipt title + actions -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <div>
       <div style="font-weight:600">QikSend-X</div>
-      <div class="muted">Parcel tracking & delivery receipt</div>
+      <div class="muted">Parcel tracking and delivery receipt</div>
     </div>
     <div class="no-print">
       <a class="btn" href="{{ url_for('parcels') }}" style="margin-right:8px">Back</a>
@@ -18,7 +16,6 @@
     </div>
   </div>
 
-  <!-- Parcel info -->
   <div class="form-grid">
     <div>
       <label>Tracking No</label>
@@ -50,11 +47,11 @@
 
     <div>
       <label>Origin Branch</label>
-      <input class="input" value="{{ p['origin_branch_name'] }} — {{ p['origin_branch_location'] }}" readonly>
+      <input class="input" value="{{ p['origin_branch_name'] }} - {{ p['origin_branch_location'] }}" readonly>
     </div>
     <div>
       <label>Destination Branch</label>
-      <input class="input" value="{{ p['destination_branch_name'] }} — {{ p['destination_branch_location'] }}" readonly>
+      <input class="input" value="{{ p['destination_branch_name'] }} - {{ p['destination_branch_location'] }}" readonly>
     </div>
 
     <div>
@@ -72,41 +69,54 @@
     </div>
   </div>
 
-  <!-- Status actions (screen only) -->
-  <div class="no-print" style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap">
+  {% if session.get('user_id') %}
+  <div class="no-print" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
     <form method="post" action="{{ url_for('update_status', id=p['id']) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="new_status" value="In_Transit">
       <button class="btn btn-small" type="submit">Mark In Transit</button>
     </form>
 
     <form method="post" action="{{ url_for('update_status', id=p['id']) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="new_status" value="Delivered">
       <button class="btn btn-small" type="submit">Mark Delivered</button>
     </form>
 
     <a class="btn btn-small" href="{{ url_for('edit_parcel', id=p['id']) }}">Edit</a>
     <form method="post" action="{{ url_for('delete_parcel', id=p['id']) }}" onsubmit="return confirm('Delete this parcel?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-small danger" type="submit">Delete</button>
     </form>
   </div>
+  {% endif %}
+
+  {% if p['history'] %}
+  <div style="margin-top:16px">
+    <div class="h2">Status History</div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Note</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in p['history'] %}
+        <tr>
+          <td>{{ item['status'] }}</td>
+          <td>{{ item['note'] or '' }}</td>
+          <td>{{ item['timestamp'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
 
   <div style="margin-top:16px;font-size:12px;opacity:.8">
-    * Keep this receipt and tracking number for pickup/delivery confirmation.
+    * Keep this receipt and tracking number for pickup and delivery confirmation.
   </div>
 </div>
-
-<style>
-  @media print {
-    .no-print, .no-print * { display: none !important; }
-    .card { 
-      box-shadow: none !important; 
-      border: 1px solid #1f2937; 
-      background: #fff !important;
-      color: #000 !important;
-    }
-    body { background: #fff !important; color: #000 !important; }
-    h1.h1 { font-size: 18px; margin-bottom: 10px; }
-    input.input { border: 1px solid #aaa !important; }
-  }
-</style>
 {% endblock %}

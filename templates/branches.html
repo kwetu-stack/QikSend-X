@@ -32,6 +32,7 @@
                 action="{{ url_for('delete_branch', id=b.id) }}"
                 style="display:inline;margin-left:8px"
                 onsubmit="return confirm('Delete this branch?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn btn-small danger" type="submit">Delete</button>
           </form>
         </td>

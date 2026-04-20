@@ -39,18 +39,21 @@
           <form method="post" action="{{ url_for('delete_parcel', id=row['id']) }}"
                 style="display:inline;margin-left:6px"
                 onsubmit="return confirm('Delete this parcel?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn btn-small danger" type="submit">Delete</button>
           </form>
 
           <!-- Status update -->
           <form method="post" action="{{ url_for('update_status', id=row['id']) }}"
                 style="display:inline;margin-left:6px">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="new_status" value="In_Transit">
             <button class="btn btn-small" type="submit">Mark In Transit</button>
           </form>
 
           <form method="post" action="{{ url_for('update_status', id=row['id']) }}"
                 style="display:inline;margin-left:6px">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="new_status" value="Delivered">
             <button class="btn btn-small" type="submit">Mark Delivered</button>
           </form>

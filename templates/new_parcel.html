@@ -1,18 +1,24 @@
 {% extends "base.html" %}
-{% block title %}New Parcel · QikSend-X{% endblock %}
+{% block title %}{{ "Edit Parcel" if parcel else "New Parcel" }} · QikSend-X{% endblock %}
 
 {% block content %}
-<h1 class="h1">Create New Parcel</h1>
+<h1 class="h1">{{ "Edit Parcel" if parcel else "Create New Parcel" }}</h1>
 
 <form method="post" class="card">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if error %}
+  <div class="notice" style="border-left:4px solid #ef4444;margin-bottom:12px">{{ error }}</div>
+  {% endif %}
+
   <div class="form-grid">
-    <!-- Sender / Recipient (DB-driven) -->
     <div>
       <label>Sender</label>
       <select class="input" name="sender_id" required>
-        <option value="" disabled selected>Select sender</option>
+        <option value="" disabled {{ '' if parcel else 'selected' }}>Select sender</option>
         {% for c in customers %}
-          <option value="{{ c['id'] }}">{{ c['name'] }} ({{ c['phone'] }})</option>
+          <option value="{{ c['id'] }}" {{ 'selected' if parcel and parcel['sender_id'] == c['id'] else '' }}>
+            {{ c['name'] }} ({{ c['phone'] }})
+          </option>
         {% endfor %}
       </select>
     </div>
@@ -20,20 +26,23 @@
     <div>
       <label>Recipient</label>
       <select class="input" name="recipient_id" required>
-        <option value="" disabled selected>Select recipient</option>
+        <option value="" disabled {{ '' if parcel else 'selected' }}>Select recipient</option>
         {% for c in customers %}
-          <option value="{{ c['id'] }}">{{ c['name'] }} ({{ c['phone'] }})</option>
+          <option value="{{ c['id'] }}" {{ 'selected' if parcel and parcel['recipient_id'] == c['id'] else '' }}>
+            {{ c['name'] }} ({{ c['phone'] }})
+          </option>
         {% endfor %}
       </select>
     </div>
 
-    <!-- Origin / Destination branches (DB-driven) -->
     <div>
       <label>Origin Branch</label>
       <select class="input" name="origin_branch_id" required>
-        <option value="" disabled selected>Select origin</option>
+        <option value="" disabled {{ '' if parcel else 'selected' }}>Select origin</option>
         {% for b in branches %}
-          <option value="{{ b['id'] }}">{{ b['name'] }} — {{ b['location'] }}</option>
+          <option value="{{ b['id'] }}" {{ 'selected' if parcel and parcel['origin_branch_id'] == b['id'] else '' }}>
+            {{ b['name'] }} - {{ b['location'] }}
+          </option>
         {% endfor %}
       </select>
     </div>
@@ -41,40 +50,45 @@
     <div>
       <label>Destination Branch</label>
       <select class="input" name="destination_branch_id" required>
-        <option value="" disabled selected>Select destination</option>
+        <option value="" disabled {{ '' if parcel else 'selected' }}>Select destination</option>
         {% for b in branches %}
-          <option value="{{ b['id'] }}">{{ b['name'] }} — {{ b['location'] }}</option>
+          <option value="{{ b['id'] }}" {{ 'selected' if parcel and parcel['destination_branch_id'] == b['id'] else '' }}>
+            {{ b['name'] }} - {{ b['location'] }}
+          </option>
         {% endfor %}
       </select>
     </div>
 
-    <!-- Optional courier assignment -->
     <div>
-      <label>Assign Courier (optional)</label>
-      <select class="input" name="courier_id">
-        <option value="">— Unassigned —</option>
+      <label>Assign Courier (required)</label>
+      <select class="input" name="courier_id" required>
+        <option value="" disabled selected>Select courier</option>
         {% for r in couriers %}
           {% if r['active'] %}
-            <option value="{{ r['id'] }}">{{ r['name'] }} ({{ r['phone'] }})</option>
+            <option value="{{ r['id'] }}" {{ 'selected' if parcel and parcel['courier_id'] == r['id'] else '' }}>
+              {{ r['name'] }} ({{ r['phone'] }})
+            </option>
           {% endif %}
         {% endfor %}
       </select>
     </div>
 
-    <!-- Parcel details -->
     <div>
       <label>Description</label>
-      <input class="input" name="description" placeholder="Small electronics">
+      <input class="input" name="description" value="{{ parcel['description'] if parcel else '' }}" placeholder="Small electronics">
     </div>
 
     <div>
       <label>Amount (KES)</label>
-      <input class="input" type="number" step="0.01" name="amount" value="300" required>
+      <input class="input" type="number" step="0.01" min="0" max="1000000"
+             name="amount"
+             value="{{ parcel['amount'] if parcel else 300 }}"
+             required>
     </div>
   </div>
 
   <div style="margin-top:12px">
-    <button class="btn" type="submit">Save &amp; Generate Tracking</button>
+    <button class="btn" type="submit">{{ "Save Changes" if parcel else "Save & Generate Tracking" }}</button>
   </div>
 </form>
 {% endblock %}
